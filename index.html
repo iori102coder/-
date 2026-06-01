@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>昭和の町観光マップ</title>
+    <style>
+
+        .header{
+            width:100%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header img{
+            width: 100%;
+            max-width: 600px;
+            height:auto;
+            border-radius: 8px;
+        }
+
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .search-area {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .results-area {
+            margin-bottom: 20px;
+        }
+        .result-item {
+            background: #fff;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-left: 5px solid #007bff;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .map-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #e9ecef; /* ??????????? */
+        }
+        .map-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        /* ???????????? */
+        .pin {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: red;
+            border-radius: 50%;
+            transform: translate(-50%, -50%); /* ????????????? */
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        .pin-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <img src = "title.png" >
+
+    <div class="search-area">
+        <h2>どこに行きたいですか？</h2>
+        <input type="text" id="searchInput" placeholder="教えてください">
+        <button onclick="searchSpots()">検索</button>
+    </div>
+
+    <div class="results-area" id="resultsArea">
+        </div>
+
+    <div class="map-container" id="mapContainer">
+        <img src="map.png" alt="?????" onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%23cccccc%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2220%22 text-anchor=%22middle%22 alignment-baseline=%22middle%22%3Emap.png ????????????????%3C/text%3E%3C/svg%3E'">
+        <div id="pinsArea">
+            </div>
+    </div>
+</div>
+
+<script>
+   
+    const spots = [
+        { id: 1, name: "郷土料理 お食事処", category: "食事", keywords: ["食べる", "お腹", "ランチ", "ご飯", "和食", "食事"], x: 30, y: 40 },
+        { id: 2, name: "レトロ喫茶", category: "食事", keywords: ["休む", "お茶", "カフェ", "甘い", "コーヒー","暑い"], x: 70, y: 50 },
+        { id: 3, name: "歴史博物館", category: "屋内観光", keywords: ["歴史", "見る", "学ぶ", "博物館", "室内観光","施設","室内"], x: 50, y: 20 },
+        { id: 4, name: "古いお寺", category: "屋外観光", keywords: ["お寺", "散歩", "静か", "景色", "屋外観光","屋外の"], x: 80, y: 80 },
+        { id: 5, name: "地元特産お土産屋", category: "お買い物", keywords: ["買う", "お土産", "買い物", "その他","地域の"], x: 20, y: 70 },
+        { id: 6, name: "観光案内所", category: "困ったら", keywords: ["迷った", "案内", "トイレ", "その他","わからない","おすすめ"], x: 10, y: 10 }
+    ];
+
+    function searchSpots() {
+        const query = document.getElementById('searchInput').value;
+        const resultsArea = document.getElementById('resultsArea');
+        const pinsArea = document.getElementById('pinsArea');
+        
+        // リセット
+        resultsArea.innerHTML = '';
+        pinsArea.innerHTML = '';
+
+        if (!query.trim()) {
+            resultsArea.innerHTML = '<p>検索キーワードを入力してください。</p>';
+            return;
+        }
+
+        // ユーザーの入力意図を推測してフィルタリング
+        let matchedSpots = spots.filter(spot => {
+            // 入力された文字が、キーワード、カテゴリ、名前のいずれかに含まれているか確認
+            return spot.keywords.some(kw => query.includes(kw)) || 
+                   query.includes(spot.category) || 
+                   query.includes(spot.name);
+        });
+
+        // ※プロトタイプ用：もしうまくマッチしなかった場合、ランダムに2〜3件返すようにする（とりあえず動かすため）
+        if (matchedSpots.length === 0) {
+            // シャッフルして先頭のものを取得
+            const shuffled = [...spots].sort(() => 0.5 - Math.random());
+            matchedSpots = shuffled.slice(0, 2);
+        }
+
+        // 結果を2〜3件に絞る（混雑緩和のため、あえて少なく提案する想定）
+        const finalResults = matchedSpots.slice(0, 3);
+
+        // --- 結果のテキスト表示 ---
+        if (finalResults.length > 0) {
+            const resultHtml = finalResults.map(spot => `
+                <div class="result-item">
+                    <strong>${spot.name}</strong> （${spot.category}）
+                </div>
+            `).join('');
+            resultsArea.innerHTML = `<p>おすすめの場所が見つかりました（${finalResults.length}件）:</p>` + resultHtml;
+        }
+
+        // --- マップ上にピンを配置 ---
+        finalResults.forEach(spot => {
+            const pinHtml = `
+                <div class="pin" style="left: ${spot.x}%; top: ${spot.y}%;">
+                    <div class="pin-label">${spot.name}</div>
+                </div>
+            `;
+            pinsArea.innerHTML += pinHtml;
+        });
+    }
+</script>
+
+</body>
+</html>
