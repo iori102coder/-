@@ -5,192 +5,772 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>昭和の町観光マップ</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
-        .header{
-            width:100%;
-            text-align: center;
-            margin-bottom: 20px;
+        :root {
+            --ink: #1a1410;
+            --paper: #f5f0e8;
+            --paper-dark: #ede6d4;
+            --accent: #b5451b;
+            --accent-light: #e8684a;
+            --accent-muted: #f0c9bc;
+            --gold: #c8922a;
+            --gold-light: #f0d898;
+            --border: #c4b49a;
+            --text-muted: #6b5a44;
+            --white: #fff9f2;
+            --pin-color: #b5451b;
+            --route-color: #0ac71d;
+            --start-color: #921410;
         }
 
-        .header img{
-            width: 100%;
-            max-width: 600px;
-            height:auto;
-            border-radius: 8px;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            font-family: sans-serif;
-            margin: 20px;
-            background-color: #f8f9fa;
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: var(--paper);
+            color: var(--ink);
+            min-height: 100vh;
         }
-        .container {
-            max-width: 800px;
+
+        /* ── ヘッダー ── */
+        .header {
+            background: var(--ink);
+            padding: 16px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--gold);
+        }
+        .header-inner {
+            max-width: 860px;
             margin: 0 auto;
         }
-        .search-area {
-            background: #fff;
-            padding: 20px;
+        .header img {
+            max-width: 320px;
+            width: 100%;
+            height: auto;
+        }
+        .header-fallback {
+            display: none;
+            color: var(--gold);
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.6rem;
+            letter-spacing: 0.15em;
+        }
+
+        /* ── レイアウト ── */
+        .page {
+            max-width: 860px;
+            margin: 0 auto;
+            padding: 24px 16px 60px;
+        }
+
+        /* ── モード切替タブ ── */
+        .mode-tabs {
+            display: flex;
+            gap: 0;
+            margin-bottom: 24px;
+            border: 2px solid var(--border);
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            overflow: hidden;
         }
-        input[type="text"] {
-            width: 70%;
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #007bff;
-            color: white;
+        .mode-tab {
+            flex: 1;
+            padding: 12px;
+            background: var(--paper-dark);
             border: none;
-            border-radius: 4px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-muted);
             cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            border-right: 1px solid var(--border);
         }
-        button:hover {
-            background-color: #0056b3;
+        .mode-tab:last-child { border-right: none; }
+        .mode-tab.active {
+            background: var(--accent);
+            color: var(--white);
+            font-weight: 700;
         }
+        .mode-tab:hover:not(.active) {
+            background: var(--accent-muted);
+            color: var(--ink);
+        }
+
+        /* ── パネル共通 ── */
+        .panel {
+            background: var(--white);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(26,20,16,0.07);
+        }
+        .panel h2 {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.1rem;
+            color: var(--accent);
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* ── 入力エリア ── */
+        .input-row {
+            display: flex;
+            gap: 10px;
+        }
+        .input-row input[type="text"] {
+            flex: 1;
+            padding: 11px 14px;
+            font-size: 0.95rem;
+            font-family: 'Noto Sans JP', sans-serif;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            background: var(--paper);
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .input-row input[type="text"]:focus {
+            border-color: var(--accent);
+        }
+        .btn {
+            padding: 11px 22px;
+            font-size: 0.95rem;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-weight: 700;
+            background: var(--accent);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+        .btn:hover { background: var(--accent-light); }
+        .btn-gold {
+            background: var(--gold);
+        }
+        .btn-gold:hover { background: var(--accent); }
+
+        .hint-text {
+            margin-top: 10px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        .hint-text span {
+            display: inline-block;
+            background: var(--paper-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 1px 6px;
+            font-size: 0.8rem;
+            margin: 2px 2px;
+        }
+
+        /* ── 結果リスト ── */
         .results-area {
             margin-bottom: 20px;
         }
-        .result-item {
-            background: #fff;
-            padding: 10px 15px;
-            margin-bottom: 10px;
-            border-left: 5px solid #007bff;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        .result-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-        .map-container {
+        .result-item {
+            background: var(--white);
+            border: 1.5px solid var(--border);
+            border-left: 5px solid var(--accent);
+            border-radius: 6px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 1px 3px rgba(26,20,16,0.06);
+        }
+        .result-item.route-step {
+            border-left-color: var(--gold);
+        }
+        .result-item.route-step.is-start {
+            border-left-color: var(--start-color);
+        }
+        .step-badge {
+            min-width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--gold);
+            color: var(--white);
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .step-badge.start { background: var(--start-color); }
+        .step-badge.end { background: var(--accent); }
+        .result-name { font-weight: 700; font-size: 0.95rem; }
+        .result-role {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .result-tag {
+            margin-left: auto;
+            font-size: 0.75rem;
+            background: var(--paper-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 8px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .message-box {
+            padding: 12px 16px;
+            background: var(--paper-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+        .message-box.success {
+            background: #eef6f0;
+            border-color: #8fc4a0;
+            color: #2a5e3b;
+        }
+
+        /* ── マップ ── */
+        .map-wrap {
             position: relative;
             width: 100%;
-            max-width: 800px;
-            border: 2px solid #ccc;
-            border-radius: 8px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
             overflow: hidden;
-            background-color: #e9ecef; /* ??????????? */
+            background: var(--paper-dark);
+            box-shadow: 0 4px 16px rgba(26,20,16,0.1);
         }
-        .map-container img {
+        .map-wrap img {
             width: 100%;
             height: auto;
             display: block;
         }
-        /* ???????????? */
-        .pin {
+        #pinsArea {
             position: absolute;
-            width: 20px;
-            height: 20px;
-            background-color: red;
-            border-radius: 50%;
-            transform: translate(-50%, -50%); /* ????????????? */
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            cursor: pointer;
-        }
-        .pin-label {
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: nowrap;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            inset: 0;
             pointer-events: none;
         }
+
+        /* ── ピン ── */
+        .pin {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: all;
+            cursor: pointer;
+        }
+        .pin-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--pin-color);
+            border: 2.5px solid var(--white);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+            transition: transform 0.15s;
+        }
+        .pin:hover .pin-dot { transform: scale(1.25); }
+        .pin.route-pin .pin-dot { background: var(--gold); }
+        .pin.start-pin .pin-dot { background: var(--start-color); width: 22px; height: 22px; }
+        .pin.goal-pin .pin-dot { background: var(--accent); width: 22px; height: 22px; }
+
+        .pin-label {
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--ink);
+            color: var(--white);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s;
+        }
+        .pin:hover .pin-label { opacity: 1; }
+
+        /* ルートSVG */
+        #routeSvg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* 出発地ラベル */
+        .start-label {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--start-color);
+            color: var(--white);
+            font-size: 0.82rem;
+            font-weight: 700;
+            padding: 5px 14px;
+            border-radius: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        /* ── ルート凡例 ── */
+        .legend {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            padding: 10px 0 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--white);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        /* ── 出発地点フッター ── */
+        .start-footer {
+            margin-top: 20px;
+            padding: 12px 18px;
+            background: linear-gradient(90deg, #eef6f0, #f5f0e8);
+            border: 1.5px solid #8fc4a0;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            color: var(--start-color);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .start-footer::before {
+            content: '🚩';
+            font-size: 1.1rem;
+        }
+
+        .section-mode { display: none; }
+        .section-mode.active { display: block; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <img src = "title.png" >
-
-    <div class="search-area">
-        <h2>どこに行きたいですか？</h2>
-        <input type="text" id="searchInput" placeholder="教えてください">
-        <button onclick="searchSpots()">検索</button>
-    </div>
-
-    <div class="results-area" id="resultsArea">
-        </div>
-
-    <div class="map-container" id="mapContainer">
-        <img src="map.png" alt="?????" onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22600%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%23cccccc%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-size=%2220%22 text-anchor=%22middle%22 alignment-baseline=%22middle%22%3Emap.png ????????????????%3C/text%3E%3C/svg%3E'">
-        <div id="pinsArea">
-            </div>
+<div class="header">
+    <div class="header-inner">
+        <img src="title.png" alt="昭和の町観光マップ"
+             onerror="this.style.display='none'; document.querySelector('.header-fallback').style.display='block'">
+        <div class="header-fallback">昭和の町　観光マップ</div>
     </div>
 </div>
 
+<div class="page">
+
+    <!-- モード切替 -->
+    <div class="mode-tabs">
+        <button class="mode-tab active" onclick="switchMode('search')"> スポット検索</button>
+        <button class="mode-tab" onclick="switchMode('route')"> ルート案内</button>
+    </div>
+
+    <!-- ── スポット検索モード ── -->
+    <div id="mode-search" class="section-mode active">
+        <div class="panel">
+            <h2>どこに行きたいですか？</h2>
+            <div class="input-row">
+                <input type="text" id="searchInput" placeholder="例：和食、お土産、軽食…"
+                       onkeydown="if(event.key==='Enter') searchSpots()">
+                <button class="btn" onclick="searchSpots()">検索</button>
+            </div>
+            <div class="hint-text">
+                キーワード例：
+                <span>和食</span><span>洋食</span><span>軽食</span><span>お土産</span>
+                <span>雑貨</span><span>着物</span><span>食べ歩き</span><span>酒</span>
+            </div>
+        </div>
+
+        <div class="results-area" id="searchResults"></div>
+    </div>
+
+    <!-- ── ルート案内モード ── -->
+    <div id="mode-route" class="section-mode">
+        <div class="panel">
+            <h2>どんなお散歩をしたいですか？</h2>
+            <div class="input-row">
+                <input type="text" id="routeInput"
+                       placeholder="例：食べ歩きしながら散歩して最後に軽食で休憩したい"
+                       onkeydown="if(event.key==='Enter') planRoute()">
+                <button class="btn btn-gold" onclick="planRoute()">ルート作成</button>
+            </div>
+            <div class="hint-text">
+                自由に気持ちを入力してください。食べ歩き・軽食・お土産・和食・雑貨 など、やりたいことを組み合わせてOKです。
+            </div>
+        </div>
+
+        <div id="routeResults" class="results-area"></div>
+    </div>
+
+    <!-- マップ -->
+    <div class="map-wrap" id="mapContainer">
+        <img src="map.png" alt="観光マップ"
+             id="mapImg"
+             onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22560%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%23ede6d4%22/%3E%3Ctext x=%2250%25%22 y=%2248%25%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22%236b5a44%22%3Emap.png を配置してください%3C/text%3E%3C/svg%3E'">
+        <svg id="routeSvg" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"></svg>
+        <div id="pinsArea"></div>
+        <div class="start-label"> 出発・ゴール地点</div>
+    </div>
+
+    <div class="start-footer">
+        出発地点はマップ下端（現在地）です。ルート案内は出発地点から始まり、同じ場所へ戻ってきます。
+    </div>
+
+</div>
+
 <script>
-   
-    const spots = [
-        { id: 1, name: "郷土料理 お食事処", category: "食事", keywords: ["食べる", "お腹", "ランチ", "ご飯", "和食", "食事"], x: 30, y: 40 },
-        { id: 2, name: "レトロ喫茶", category: "食事", keywords: ["休む", "お茶", "カフェ", "甘い", "コーヒー","暑い"], x: 70, y: 50 },
-        { id: 3, name: "歴史博物館", category: "屋内観光", keywords: ["歴史", "見る", "学ぶ", "博物館", "室内観光","施設","室内"], x: 50, y: 20 },
-        { id: 4, name: "古いお寺", category: "屋外観光", keywords: ["お寺", "散歩", "静か", "景色", "屋外観光","屋外の"], x: 80, y: 80 },
-        { id: 5, name: "地元特産お土産屋", category: "お買い物", keywords: ["買う", "お土産", "買い物", "その他","地域の"], x: 20, y: 70 },
-        { id: 6, name: "観光案内所", category: "困ったら", keywords: ["迷った", "案内", "トイレ", "その他","わからない","おすすめ"], x: 10, y: 10 }
+// =====================================================================
+// スポットデータ（x, y はマップ上の % 座標）
+// =====================================================================
+const spots = [
+    // ── 上エリア（y: 8〜14）──
+    { id:1,  name:"PIENI KOTA",              category:"飲食系",  keywords:["洋食"],                         x:37, y:10 },
+    { id:2,  name:"津久井茶舗",              category:"買い物系", keywords:["お土産","茶"],                  x:42, y:8  },
+    { id:3,  name:"スナックれん",            category:"飲食系",  keywords:["軽食","酒"],                    x:30, y:12 },
+    { id:4,  name:"秋本写真館",              category:"その他",  keywords:["その他","写真"],                x:62, y:9  },
+    { id:5,  name:"きょうのごはん ゆるりCafe",category:"飲食系", keywords:["軽食","カフェ"],                x:72, y:11 },
+    { id:6,  name:"そば処たぐち",            category:"飲食系",  keywords:["和食","そば"],                  x:80, y:8  },
+    { id:7,  name:"松山",                    category:"飲食系",  keywords:["和食"],                         x:88, y:14 },
+    { id:8,  name:"うなぎ 小日向",           category:"飲食系",  keywords:["和食","うなぎ"],                x:15, y:10 },
+    { id:9,  name:"隠れ家のアンテナショップ くるみの木", category:"買い物系", keywords:["雑貨"],           x:20, y:8  },
+    { id:10, name:"QUONチョコレート",        category:"買い物系", keywords:["お土産","チョコ"],             x:67, y:7  },
+    // ── 中上エリア（y: 22〜27）──
+    { id:11, name:"うどんとお酒 土麦",       category:"飲食系",  keywords:["和食","うどん","酒"],           x:35, y:25 },
+    { id:12, name:"Record&Bar じいさまレコード", category:"飲食系", keywords:["軽食","酒","音楽"],         x:40, y:23 },
+    { id:13, name:"乾物問屋＆喫茶",          category:"飲食系",  keywords:["軽食","カフェ"],                x:46, y:24 },
+    { id:14, name:"%SPECIAL COFFEE",         category:"飲食系",  keywords:["軽食","カフェ","コーヒー"],     x:55, y:22 },
+    { id:15, name:"フォーチュン川越店",      category:"その他",  keywords:["その他"],                       x:63, y:23 },
+    { id:16, name:"花緑",                    category:"飲食系",  keywords:["和食"],                         x:70, y:24 },
+    { id:17, name:"ちょっと気になるお店",    category:"その他",  keywords:["その他"],                       x:78, y:22 },
+    { id:18, name:"R House 川越",            category:"飲食系",  keywords:["洋食"],                         x:14, y:26 },
+    { id:19, name:"花の日巻",                category:"買い物系", keywords:["花"],                          x:22, y:27 },
+    { id:20, name:"中庭表装",                category:"買い物系", keywords:["その他"],                      x:28, y:24 },
+    // ── 中段上（y: 35〜38）──
+    { id:21, name:"ムーンてらす",            category:"観覧系",  keywords:["その他"],                       x:36, y:36 },
+    { id:22, name:"木製雑貨と手作り食品 雑貨店", category:"買い物系", keywords:["雑貨"],                  x:41, y:35 },
+    { id:23, name:"木製花店",                category:"買い物系", keywords:["雑貨"],                        x:48, y:37 },
+    { id:24, name:"きものや沙羅",            category:"買い物系", keywords:["着物"],                        x:53, y:36 },
+    { id:25, name:"大黒屋食堂",              category:"飲食系",  keywords:["和食"],                         x:60, y:37 },
+    { id:26, name:"大黒屋雑穀店",            category:"買い物系", keywords:["雑貨","食材"],                 x:66, y:36 },
+    { id:27, name:"自由料理 某所",           category:"飲食系",  keywords:["和食"],                         x:74, y:38 },
+    { id:28, name:"軽食とお酒 こひとん",     category:"飲食系",  keywords:["軽食","酒"],                   x:81, y:37 },
+    { id:29, name:"ワインスタンド PON!",     category:"飲食系",  keywords:["軽食","酒"],                   x:14, y:38 },
+    { id:30, name:"富士見焼店",              category:"買い物系", keywords:["その他"],                      x:23, y:38 },
+    // ── 中段（y: 46〜48）──
+    { id:31, name:"手打そば亭 更科",         category:"飲食系",  keywords:["和食","そば"],                  x:37, y:47 },
+    { id:32, name:"モリヤ木綿店",            category:"買い物系", keywords:["布"],                          x:43, y:46 },
+    { id:33, name:"富士フルーツ大福 果朋庵", category:"飲食系",  keywords:["軽食","食べ歩き","お土産","和菓子"], x:49, y:48 },
+    { id:34, name:"菓子工房かとう",          category:"買い物系", keywords:["菓子","食べ歩き","お土産","和菓子"], x:56, y:47 },
+    { id:35, name:"松江園茶舗",              category:"買い物系", keywords:["茶","お土産"],                 x:62, y:46 },
+    { id:36, name:"肉の十一屋",              category:"買い物系", keywords:["軽食","食べ歩き","お土産"],    x:69, y:48 },
+    { id:37, name:"ダイニングキッチン LIFE", category:"飲食系",  keywords:["洋食"],                         x:76, y:47 },
+    { id:38, name:"和菓子カフェ藤乃",        category:"飲食系",  keywords:["和菓子","軽食","カフェ"],      x:84, y:46 },
+    { id:39, name:"小鉢めし 空・そば処 食堂",category:"飲食系", keywords:["和食"],                         x:16, y:48 },
+    { id:40, name:"ピッツェリア ロッコ",     category:"飲食系",  keywords:["洋食","ピザ"],                  x:25, y:47 },
+    // ── 中段下（y: 58〜60）──
+    { id:41, name:"トシノコーヒー",          category:"飲食系",  keywords:["軽食","カフェ","コーヒー"],     x:36, y:58 },
+    { id:42, name:"ギタランド",              category:"その他",  keywords:["その他"],                       x:42, y:59 },
+    { id:43, name:"おむすび・ワッフル 稲穂スタンド", category:"飲食系", keywords:["軽食","食べ歩き"],      x:50, y:58 },
+    { id:44, name:"めだか屋 喜楽",           category:"飲食系",  keywords:["飲食"],                         x:57, y:59 },
+    { id:45, name:"レストラン シマヤ",       category:"飲食系",  keywords:["和食"],                         x:63, y:58 },
+    { id:46, name:"和菓子 伊勢屋",           category:"買い物系", keywords:["軽食","食べ歩き","お土産","和菓子"], x:70, y:59 },
+    { id:47, name:"NEWかわい",               category:"買い物系", keywords:["買い物"],                      x:77, y:58 },
+    { id:48, name:"Hotpot COEDOYA",          category:"飲食系",  keywords:["和食","鍋"],                    x:84, y:59 },
+    { id:49, name:"FOOD HALL",               category:"飲食系",  keywords:["飲食","軽食"],                  x:15, y:60 },
+    { id:50, name:"おがひろ 月うさぎ",       category:"飲食系",  keywords:["軽食"],                         x:23, y:59 },
+    // ── 下段（y: 69〜71）──
+    { id:51, name:"お酒・お料理 平和",       category:"飲食系",  keywords:["軽食","酒"],                   x:37, y:69 },
+    { id:52, name:"牛SOSA にぼし醤",         category:"飲食系",  keywords:["軽食"],                         x:43, y:70 },
+    { id:53, name:"th-coffee",               category:"飲食系",  keywords:["軽食","カフェ","コーヒー"],     x:49, y:69 },
+    { id:54, name:"きものやHARU",            category:"買い物系", keywords:["着物"],                        x:56, y:70 },
+    { id:55, name:"本格純生そば まことや",   category:"飲食系",  keywords:["和食","そば"],                  x:63, y:69 },
+    { id:56, name:"浪漫亭西館",              category:"飲食系",  keywords:["和食"],                         x:70, y:71 },
+    { id:57, name:"小江戸焼き芋 芋福堂",     category:"飲食系",  keywords:["軽食","食べ歩き"],              x:77, y:70 },
+    { id:58, name:"時うどん くらうど",       category:"飲食系",  keywords:["和食","うどん"],                x:14, y:71 },
+    { id:59, name:"うなぎ・かご膳 萬彩39",  category:"飲食系",  keywords:["和食","うなぎ"],                x:22, y:70 },
+    { id:60, name:"肉中華料理",              category:"飲食系",  keywords:["洋食","中華"],                  x:30, y:69 },
+    // ── 最下段（y: 80〜82）──
+    { id:61, name:"カントリーファームキッチン", category:"飲食系", keywords:["洋食"],                      x:36, y:81 },
+    { id:62, name:"cafe Crescent -ICHIBA-",  category:"飲食系",  keywords:["軽食","カフェ"],                x:43, y:82 },
+    { id:63, name:"おもちゃのまちびつ",      category:"買い物系", keywords:["玩具"],                        x:50, y:80 },
+];
+// =====================================================================
+// ルート解析：入力文からステップ種別を抽出する
+// =====================================================================
+const intentPatterns = [
+    { intent:"食べ歩き", kw:"食べ歩き",    matchKeys:["食べ歩き"] },
+    { intent:"和食",     kw:"和食",        matchKeys:["和食","そば","うどん","うなぎ","鍋"] },
+    { intent:"洋食",     kw:"洋食",        matchKeys:["洋食","ピザ","中華"] },
+    { intent:"軽食",     kw:"軽食・カフェ", matchKeys:["軽食","カフェ","コーヒー"] },
+    { intent:"お土産",   kw:"お土産",      matchKeys:["お土産","和菓子","菓子","茶","チョコ"] },
+    { intent:"雑貨",     kw:"雑貨",        matchKeys:["雑貨"] },
+    { intent:"お酒",     kw:"お酒",        matchKeys:["酒"] },
+    { intent:"着物",     kw:"着物",        matchKeys:["着物"] },
+];
+
+function parseIntents(text) {
+    const found = [];
+    for (const p of intentPatterns) {
+        // 入力テキストに意図キーワードが含まれるかチェック
+        if (text.includes(p.intent) || text.includes(p.kw) ||
+            p.matchKeys.some(k => text.includes(k))) {
+            found.push(p);
+        }
+    }
+    // 「軽食」「休憩」は終盤に向けた意図として読み替え
+    const wantRest = /休憩|ゆっくり|のんびり|座|カフェ/.test(text);
+    const wantSnack = /軽食|おやつ|ちょっと食べ/.test(text);
+    const wantWalk = /散歩|お散歩|歩き|巡り/.test(text);
+    return { intents: found, wantRest, wantSnack, wantWalk };
+}
+
+function pickSpotForKeys(keys, excludeIds) {
+    const candidates = spots.filter(s =>
+        s.keywords.some(k => keys.includes(k)) && !excludeIds.has(s.id)
+    );
+    if (!candidates.length) return null;
+    // ランダムに1件
+    return candidates[Math.floor(Math.random() * candidates.length)];
+}
+
+function buildRoute(text) {
+    const { intents, wantRest, wantSnack } = parseIntents(text);
+    const used = new Set();
+    const steps = []; // {spot, role}
+
+    // インテントが何もなければ汎用
+    if (intents.length === 0) {
+        // デフォルト：食べ歩き→軽食
+        intents.push(intentPatterns[0], intentPatterns[3]);
+    }
+
+    // 各インテントからスポットを1つずつ
+    for (const p of intents) {
+        const spot = pickSpotForKeys(p.matchKeys, used);
+        if (spot) {
+            steps.push({ spot, role: p.kw });
+            used.add(spot.id);
+        }
+    }
+
+    // 「休憩」要求がありかつ最後がカフェ系でなければカフェを末尾に追加
+    const lastRole = steps.length ? steps[steps.length - 1].role : '';
+    if ((wantRest || wantSnack) && !lastRole.includes('軽食')) {
+        const rest = pickSpotForKeys(['軽食','カフェ','コーヒー'], used);
+        if (rest) { steps.push({ spot: rest, role: '軽食・休憩' }); used.add(rest.id); }
+    }
+
+    return steps;
+}
+
+// =====================================================================
+// UI
+// =====================================================================
+let currentMode = 'search';
+
+function switchMode(mode) {
+    currentMode = mode;
+    document.querySelectorAll('.mode-tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && mode === 'search') || (i === 1 && mode === 'route'));
+    });
+    document.getElementById('mode-search').classList.toggle('active', mode === 'search');
+    document.getElementById('mode-route').classList.toggle('active', mode === 'route');
+    clearMap();
+}
+
+function clearMap() {
+    document.getElementById('pinsArea').innerHTML = '';
+    document.getElementById('routeSvg').innerHTML = '';
+}
+
+// ── スポット検索 ──
+function searchSpots() {
+    const query = document.getElementById('searchInput').value.trim();
+    const area = document.getElementById('searchResults');
+    clearMap();
+    if (!query) {
+        area.innerHTML = '<div class="message-box">キーワードを入力してください。</div>';
+        return;
+    }
+    let matched = spots.filter(s =>
+        s.keywords.some(k => query.includes(k)) ||
+        query.includes(s.category) ||
+        s.keywords.some(k => k.includes(query))
+    );
+    if (!matched.length) {
+        const shuffled = [...spots].sort(() => 0.5 - Math.random());
+        matched = shuffled.slice(0, 3);
+    }
+    const results = matched.slice(0, 4);
+
+    let html = `<div class="result-list">`;
+    results.forEach(s => {
+        html += `<div class="result-item">
+            <div>
+                <div class="result-name">${s.name}</div>
+                <div class="result-role">${s.category}</div>
+            </div>
+            <div class="result-tag">${s.keywords.join(' / ')}</div>
+        </div>`;
+        addPin(s, false);
+    });
+    html += `</div>`;
+    area.innerHTML = `<div class="message-box success" style="margin-bottom:10px">📍 ${results.length} 件見つかりました</div>` + html;
+}
+
+// ── ルート案内 ──
+function planRoute() {
+    const text = document.getElementById('routeInput').value.trim();
+    const area = document.getElementById('routeResults');
+    clearMap();
+
+    if (!text) {
+        area.innerHTML = '<div class="message-box">やりたいことを入力してください。</div>';
+        return;
+    }
+
+    const steps = buildRoute(text);
+
+    if (!steps.length) {
+        area.innerHTML = '<div class="message-box">マッチするスポットが見つかりませんでした。別のキーワードをお試しください。</div>';
+        return;
+    }
+
+    // 出発地点：マップ下端中央
+    const startX = 50, startY = 95;
+
+    // --- 結果テキスト ---
+    let html = `<div class="message-box success" style="margin-bottom:10px">🗺️ ${steps.length} ヶ所を巡るルートが完成しました！</div>
+    <div class="result-list">
+        <div class="result-item route-step is-start">
+            <div class="step-badge start">🚩</div>
+            <div><div class="result-name">出発地点（現在地）</div></div>
+        </div>`;
+    steps.forEach((s, i) => {
+        html += `<div class="result-item route-step">
+            <div class="step-badge">${i + 1}</div>
+            <div>
+                <div class="result-name">${s.spot.name}</div>
+                <div class="result-role">${s.spot.category}</div>
+            </div>
+            <div class="result-tag">${s.role}</div>
+        </div>`;
+    });
+    html += `<div class="result-item route-step is-start">
+            <div class="step-badge end">🏁</div>
+            <div><div class="result-name">出発地点へ戻る</div></div>
+        </div>
+    </div>`;
+    area.innerHTML = html;
+
+    // --- マップにルートを描く ---
+    // 出発地ピン
+    addStartPin(startX, startY);
+
+    // ルートポイントの座標列
+    const routePoints = [
+        { x: startX, y: startY },
+        ...steps.map(s => ({ x: s.spot.x, y: s.spot.y })),
+        { x: startX, y: startY }, // 戻る
     ];
 
-    function searchSpots() {
-        const query = document.getElementById('searchInput').value;
-        const resultsArea = document.getElementById('resultsArea');
-        const pinsArea = document.getElementById('pinsArea');
-        
-        // リセット
-        resultsArea.innerHTML = '';
-        pinsArea.innerHTML = '';
+    // SVGで線を描く
+    drawRoute(routePoints);
 
-        if (!query.trim()) {
-            resultsArea.innerHTML = '<p>検索キーワードを入力してください。</p>';
-            return;
-        }
+    // 各ステップのピンを追加
+    steps.forEach((s, i) => {
+        addRoutePin(s.spot, i + 1);
+    });
+}
 
-        // ユーザーの入力意図を推測してフィルタリング
-        let matchedSpots = spots.filter(spot => {
-            // 入力された文字が、キーワード、カテゴリ、名前のいずれかに含まれているか確認
-            return spot.keywords.some(kw => query.includes(kw)) || 
-                   query.includes(spot.category) || 
-                   query.includes(spot.name);
-        });
+// =====================================================================
+// ピン & ルート描画
+// =====================================================================
+function addPin(spot, isRoute) {
+    const pin = document.createElement('div');
+    pin.className = 'pin' + (isRoute ? ' route-pin' : '');
+    pin.style.left = spot.x + '%';
+    pin.style.top = spot.y + '%';
+    pin.innerHTML = `<div class="pin-dot"></div><div class="pin-label">${spot.name}</div>`;
+    document.getElementById('pinsArea').appendChild(pin);
+}
 
-        // ※プロトタイプ用：もしうまくマッチしなかった場合、ランダムに2〜3件返すようにする（とりあえず動かすため）
-        if (matchedSpots.length === 0) {
-            // シャッフルして先頭のものを取得
-            const shuffled = [...spots].sort(() => 0.5 - Math.random());
-            matchedSpots = shuffled.slice(0, 2);
-        }
+function addRoutePin(spot, num) {
+    const pin = document.createElement('div');
+    pin.className = 'pin route-pin';
+    pin.style.left = spot.x + '%';
+    pin.style.top = spot.y + '%';
+    pin.innerHTML = `
+        <div class="pin-dot" style="display:flex;align-items:center;justify-content:center;color:#fff;font-size:9px;font-weight:700;">${num}</div>
+        <div class="pin-label">${num}. ${spot.name}</div>`;
+    document.getElementById('pinsArea').appendChild(pin);
+}
 
-        // 結果を2〜3件に絞る（混雑緩和のため、あえて少なく提案する想定）
-        const finalResults = matchedSpots.slice(0, 3);
+function addStartPin(x, y) {
+    const pin = document.createElement('div');
+    pin.className = 'pin start-pin';
+    pin.style.left = x + '%';
+    pin.style.top = y + '%';
+    pin.innerHTML = `<div class="pin-dot"></div><div class="pin-label"> 出発地点</div>`;
+    document.getElementById('pinsArea').appendChild(pin);
+}
 
-        // --- 結果のテキスト表示 ---
-        if (finalResults.length > 0) {
-            const resultHtml = finalResults.map(spot => `
-                <div class="result-item">
-                    <strong>${spot.name}</strong> （${spot.category}）
-                </div>
-            `).join('');
-            resultsArea.innerHTML = `<p>おすすめの場所が見つかりました（${finalResults.length}件）:</p>` + resultHtml;
-        }
+function drawRoute(points) {
+    const svg = document.getElementById('routeSvg');
+    svg.innerHTML = '';
 
-        // --- マップ上にピンを配置 ---
-        finalResults.forEach(spot => {
-            const pinHtml = `
-                <div class="pin" style="left: ${spot.x}%; top: ${spot.y}%;">
-                    <div class="pin-label">${spot.name}</div>
-                </div>
-            `;
-            pinsArea.innerHTML += pinHtml;
-        });
+    // defs: 矢印マーカー
+    const defs = `<defs>
+        <marker id="arrow" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+            <polygon points="0 0, 7 3.5, 0 7" fill="#c8922a" opacity="0.85"/>
+        </marker>
+    </defs>`;
+    svg.innerHTML = defs;
+
+    // 折れ線
+    for (let i = 0; i < points.length - 1; i++) {
+        const a = points[i], b = points[i + 1];
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', a.x + '%');
+        line.setAttribute('y1', a.y + '%');
+        line.setAttribute('x2', b.x + '%');
+        line.setAttribute('y2', b.y + '%');
+        line.setAttribute('stroke', '#c8922a');
+        line.setAttribute('stroke-width', '2.5');
+        line.setAttribute('stroke-dasharray', '7 4');
+        line.setAttribute('stroke-linecap', 'round');
+        line.setAttribute('opacity', '0.85');
+        line.setAttribute('marker-end', 'url(#arrow)');
+        svg.appendChild(line);
     }
+}
 </script>
 
 </body>
